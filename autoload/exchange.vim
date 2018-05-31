@@ -1,3 +1,8 @@
+if exists('g:autoloaded_exchange')
+    finish
+endif
+let g:autoloaded_exchange = 1
+
 let s:enable_highlighting = 1
 
 " Interface {{{1
