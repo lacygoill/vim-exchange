@@ -5,7 +5,7 @@ let g:loaded_exchange = 1
 
 let s:enable_highlighting = 1
 
-function! s:exchange(x, y, reverse, expand)
+fu! s:exchange(x, y, reverse, expand) abort
     let reg_z = s:save_reg('z')
     let reg_unnamed = s:save_reg('"')
     let reg_star = s:save_reg('*')
@@ -26,13 +26,13 @@ function! s:exchange(x, y, reverse, expand)
     call s:setpos("'[", a:y.start)
     call s:setpos("']", a:y.end)
     call setreg('z', a:x.text, a:x.type)
-    silent execute "normal! `[" . a:y.type . "`]\"zp"
+     sil exe "norm! `[" . a:y.type . "`]\"zp"
 
     if !a:expand
         call s:setpos("'[", a:x.start)
         call s:setpos("']", a:x.end)
         call setreg('z', a:y.text, a:y.type)
-        silent execute "normal! `[" . a:x.type . "`]\"zp"
+         sil exe "norm! `[" . a:x.type . "`]\"zp"
     endif
 
     if indent
@@ -55,9 +55,9 @@ function! s:exchange(x, y, reverse, expand)
     call s:restore_reg('"', reg_unnamed)
     call s:restore_reg('*', reg_star)
     call s:restore_reg('+', reg_plus)
-endfunction
+endfu
 
-function! s:fix_cursor(x, y, reverse)
+fu! s:fix_cursor(x, y, reverse) abort
     if a:reverse
         call cursor(a:x.start.line, a:x.start.column)
     else
@@ -69,16 +69,16 @@ function! s:fix_cursor(x, y, reverse)
             call cursor(a:x.start.line - vertical_offset, a:x.start.column)
         endif
     endif
-endfunction
+endfu
 
-function! s:reindent(start, lines, new_indent)
+fu! s:reindent(start, lines, new_indent) abort
     if s:get_setting('exchange_indent', 1) == '=='
         let lnum = nextnonblank(a:start)
         if lnum == 0 || lnum > a:start + a:lines - 1
             return
         endif
         let line = getline(lnum)
-        execute "silent normal! " . lnum . "G=="
+        exe " sil norm! " . lnum . "G=="
         let new_indent = matchstr(getline(lnum), '^\s*')
         call setline(lnum, line)
     else
@@ -106,16 +106,16 @@ function! s:reindent(start, lines, new_indent)
             endfor
         endif
     endif
-endfunction
+endfu
 
-function! s:exchange_get(type, vis)
+fu! s:exchange_get(type, vis) abort
     let reg = s:save_reg('"')
     let reg_star = s:save_reg('*')
     let reg_plus = s:save_reg('+')
     if a:vis
         let type = a:type
         let [start, end] = s:store_pos("'<", "'>")
-        silent normal! gvy
+         sil norm! gvy
         if &selection ==# 'exclusive' && start != end
             let end.column -= len(matchstr(@@, '\_.$'))
         endif
@@ -125,15 +125,15 @@ function! s:exchange_get(type, vis)
         if a:type == 'line'
             let type = 'V'
             let [start, end] = s:store_pos("'[", "']")
-            silent execute "normal! '[V']y"
+             sil exe "norm! '[V']y"
         elseif a:type == 'block'
-            let type = "\<C-V>"
+            let type = "\<c-V>"
             let [start, end] = s:store_pos("'[", "']")
-            silent execute "normal! `[\<C-V>`]y"
+             sil exe "norm! `[\<c-V>`]y"
         else
             let type = 'v'
             let [start, end] = s:store_pos("'[", "']")
-            silent execute "normal! `[v`]y"
+             sil exe "norm! `[v`]y"
         endif
         let &selection = selection
     endif
@@ -147,14 +147,14 @@ function! s:exchange_get(type, vis)
     \	'start': start,
     \	'end': s:apply_type(end, type)
     \ }
-endfunction
+endfu
 
-function! s:exchange_set(type, ...)
+fu! s:exchange_set(type, ...) abort
     if !exists('b:exchange')
         let b:exchange = s:exchange_get(a:type, a:0)
         let b:exchange_matches = s:highlight(b:exchange)
         " Tell tpope/vim-repeat that '.' should repeat the Exchange motion
-        silent! call repeat#invalidate()
+         sil! call repeat#invalidate()
     else
         let exchange1 = b:exchange
         let exchange2 = s:exchange_get(a:type, a:0)
@@ -178,31 +178,31 @@ function! s:exchange_set(type, ...)
         call s:exchange(exchange1, exchange2, reverse, expand)
         call s:exchange_clear()
     endif
-endfunction
+endfu
 
-function! s:exchange_clear()
+fu! s:exchange_clear() abort
     unlet! b:exchange
     if exists('b:exchange_matches')
         call s:highlight_clear(b:exchange_matches)
         unlet b:exchange_matches
     endif
-endfunction
+endfu
 
-function! s:save_reg(name)
+fu! s:save_reg(name) abort
     try
         return [getreg(a:name), getregtype(a:name)]
     catch /.*/
         return ['', '']
     endtry
-endfunction
+endfu
 
-function! s:restore_reg(name, reg)
-    silent! call setreg(a:name, a:reg[0], a:reg[1])
-endfunction
+fu! s:restore_reg(name, reg) abort
+     sil! call setreg(a:name, a:reg[0], a:reg[1])
+endfu
 
-function! s:highlight(exchange)
+fu! s:highlight(exchange) abort
     let regions = []
-    if a:exchange.type == "\<C-V>"
+    if a:exchange.type == "\<c-V>"
         let blockstartcol = virtcol([a:exchange.start.line, a:exchange.start.column])
         let blockendcol = virtcol([a:exchange.end.line, a:exchange.end.column])
         if blockstartcol > blockendcol
@@ -221,34 +221,30 @@ function! s:highlight(exchange)
         let regions += [[startline, startcol, endline, endcol]]
     endif
     return map(regions, 's:highlight_region(v:val)')
-endfunction
+endfu
 
-function! s:highlight_region(region)
-    let pattern = '\%'.a:region[0].'l\%'.a:region[1].'v\_.\{-}\%'.a:region[2].'l\(\%>'.a:region[3].'v\|$\)'
-    return matchadd('_exchange_region', pattern)
-endfunction
+fu! s:highlight_region(region) abort
+    let pat = '\%'.a:region[0].'l\%'.a:region[1].'v\_.\{-}\%'.a:region[2].'l\(\%>'.a:region[3].'v\|$\)'
+    return matchadd('_exchange_region', pat)
+endfu
 
-function! s:highlight_clear(match)
+fu! s:highlight_clear(match) abort
     for m in a:match
-        silent! call matchdelete(m)
+         sil! call matchdelete(m)
     endfor
-endfunction
+endfu
 
-function! s:highlight_toggle(...)
-    if a:0 == 1
-        let s:enable_highlighting = a:1
-    else
-        let s:enable_highlighting = !s:enable_highlighting
-    endif
-    execute 'highlight link _exchange_region' (s:enable_highlighting ? 'ExchangeRegion' : 'None')
-endfunction
+fu! s:highlight_toggle(...) abort
+    let s:enable_highlighting = a:0 ? a:1 : !s:enable_highlighting
+    exe 'hi link _exchange_region '.(s:enable_highlighting ? 'ExchangeRegion' : 'None')
+endfu
 
 " Return < 0 if x comes before y in buffer,
 "        = 0 if x and y overlap in buffer,
 "        > 0 if x comes after y in buffer
-function! s:compare(x, y)
+fu! s:compare(x, y) abort
     " Compare two blockwise regions.
-    if a:x.type == "\<C-V>" && a:y.type == "\<C-V>"
+    if a:x.type == "\<c-V>" && a:y.type == "\<c-V>"
         if s:intersects(a:x, a:y)
             return 'overlap'
         endif
@@ -273,38 +269,38 @@ function! s:compare(x, y)
 
     let cmp = s:compare_pos(a:x.start, a:y.start)
     return cmp == 0 ? 'overlap' : cmp < 0 ? 'lt' : 'gt'
-endfunction
+endfu
 
-function! s:compare_pos(x, y)
+fu! s:compare_pos(x, y) abort
     if a:x.line == a:y.line
         return a:x.column - a:y.column
     else
         return a:x.line - a:y.line
     endif
-endfunction
+endfu
 
-function! s:intersects(x, y)
+fu! s:intersects(x, y) abort
     if a:x.end.column < a:y.start.column || a:x.end.line < a:y.start.line
     \	|| a:x.start.column > a:y.end.column || a:x.start.line > a:y.end.line
         return 0
     else
         return 1
     endif
-endfunction
+endfu
 
-function! s:apply_type(pos, type)
+fu! s:apply_type(pos, type) abort
     let pos = a:pos
     if a:type ==# 'V'
         let pos.column = col([pos.line, '$'])
     endif
     return pos
-endfunction
+endfu
 
-function! s:store_pos(start, end)
+fu! s:store_pos(start, end) abort
     return [s:getpos(a:start), s:getpos(a:end)]
-endfunction
+endfu
 
-function! s:getpos(mark)
+fu! s:getpos(mark) abort
     let pos = getpos(a:mark)
     let result = {}
     return {
@@ -313,42 +309,33 @@ function! s:getpos(mark)
     \	'column': pos[2],
     \	'offset': pos[3]
     \ }
-endfunction
+endfu
 
-function! s:setpos(mark, pos)
+fu! s:setpos(mark, pos) abort
     call setpos(a:mark, [a:pos.buffer, a:pos.line, a:pos.column, a:pos.offset])
-endfunction
+endfu
 
-function! s:create_map(mode, lhs, rhs)
-    if !hasmapto(a:rhs, a:mode)
-        execute a:mode.'map '.a:lhs.' '.a:rhs
-    endif
-endfunction
-
-function! s:get_setting(setting, default)
+fu! s:get_setting(setting, default) abort
     return get(b:, a:setting, get(g:, a:setting, a:default))
-endfunction
+endfu
 
-highlight default link ExchangeRegion IncSearch
+hi link ExchangeRegion IncSearch
 
-nnoremap <silent> <expr> <Plug>(Exchange) ':<C-u>set operatorfunc=<SID>exchange_set<CR>'.(v:count1 == 1 ? '' : v:count1).'g@'
-vnoremap <silent> <Plug>(Exchange) :<C-u>call <SID>exchange_set(visualmode(), 1)<CR>
-nnoremap <silent> <Plug>(ExchangeClear) :<C-u>call <SID>exchange_clear()<CR>
-nnoremap <silent> <expr> <Plug>(ExchangeLine) ':<C-u>set operatorfunc=<SID>exchange_set<CR>'.(v:count1 == 1 ? '' : v:count1).'g@_'
+nno  <expr><silent>  <plug>(exchange) ':<c-u>set opfunc=<sid>exchange_set<cr>'.(v:count1 == 1 ? '' : v:count1).'g@'
+vno  <silent>  <plug>(exchange) :<c-u>call <sid>exchange_set(visualmode(), 1)<cr>
+nno  <silent>  <plug>(exchange_clear) :<c-u>call <sid>exchange_clear()<cr>
+nno  <expr><silent>  <plug>(exchange_line) ':<c-u>set opfunc=<sid>exchange_set<cr>'.(v:count1 == 1 ? '' : v:count1).'g@_'
 
-command! XchangeHighlightToggle call s:highlight_toggle()
-command! XchangeHighlightEnable call s:highlight_toggle(1)
-command! XchangeHighlightDisable call s:highlight_toggle(0)
+com! XchangeHighlightToggle call s:highlight_toggle()
+com! XchangeHighlightEnable call s:highlight_toggle(1)
+com! XchangeHighlightDisable call s:highlight_toggle(0)
 
 XchangeHighlightEnable
 
-command! XchangeClear call s:exchange_clear()
+com! XchangeClear call s:exchange_clear()
 
-if exists('g:exchange_no_mappings')
-    finish
-endif
+nmap  cx   <plug>(exchange)
+xmap  X    <plug>(exchange)
+nmap  cxc  <plug>(exchange_clear)
+nmap  cxx  <plug>(exchange_line)
 
-call s:create_map('n', 'cx', '<Plug>(Exchange)')
-call s:create_map('x', 'X', '<Plug>(Exchange)')
-call s:create_map('n', 'cxc', '<Plug>(ExchangeClear)')
-call s:create_map('n', 'cxx', '<Plug>(ExchangeLine)')
