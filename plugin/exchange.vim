@@ -1,3 +1,4 @@
+" test
 let s:enable_highlighting = 1
 
 function! s:exchange(x, y, reverse, expand)
