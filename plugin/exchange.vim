@@ -321,11 +321,6 @@ endfu
 
 hi link ExchangeRegion IncSearch
 
-nno  <expr><silent>  <plug>(exchange) ':<c-u>set opfunc=<sid>exchange_set<cr>'.(v:count1 == 1 ? '' : v:count1).'g@'
-vno  <silent>  <plug>(exchange) :<c-u>call <sid>exchange_set(visualmode(), 1)<cr>
-nno  <silent>  <plug>(exchange_clear) :<c-u>call <sid>exchange_clear()<cr>
-nno  <expr><silent>  <plug>(exchange_line) ':<c-u>set opfunc=<sid>exchange_set<cr>'.(v:count1 == 1 ? '' : v:count1).'g@_'
-
 com! XchangeHighlightToggle call s:highlight_toggle()
 com! XchangeHighlightEnable call s:highlight_toggle(1)
 com! XchangeHighlightDisable call s:highlight_toggle(0)
@@ -334,8 +329,9 @@ XchangeHighlightEnable
 
 com! XchangeClear call s:exchange_clear()
 
-nmap  cx   <plug>(exchange)
-xmap  X    <plug>(exchange)
-nmap  cxc  <plug>(exchange_clear)
-nmap  cxx  <plug>(exchange_line)
+nno  <expr><silent><unique>  cx   ':<c-u>set opfunc=<sid>exchange_set<cr>'.(v:count1 == 1 ? '' : v:count1).'g@'
+xno  <silent><unique>        X     :<c-u>call <sid>exchange_set(visualmode(), 1)<cr>
+nno  <silent><unique>        cxc   :<c-u>call <sid>exchange_clear()<cr>
+nno  <silent><unique>        cxx   :<c-u>set opfunc=<sid>exchange_set
+                                   \<bar>exe 'norm! '.(v:count1 == 1 ? '' : v:count1).'g@_'<cr>
 
