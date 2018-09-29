@@ -5,10 +5,10 @@ let g:loaded_exchange = 1
 
 " Commands {{{1
 
-com! XchangeHighlightToggle call  exchange#highlight_toggle()
-com! XchangeHighlightEnable call  exchange#highlight_toggle(1)
-com! XchangeHighlightDisable call exchange#highlight_toggle(0)
-com! XchangeClear call exchange#clear()
+com! -bar XchangeHighlightToggle call  exchange#highlight_toggle()
+com! -bar XchangeHighlightEnable call  exchange#highlight_toggle(1)
+com! -bar XchangeHighlightDisable call exchange#highlight_toggle(0)
+com! -bar XchangeClear call exchange#clear()
 
 XchangeHighlightEnable
 
