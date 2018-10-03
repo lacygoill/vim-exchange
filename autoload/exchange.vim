@@ -3,8 +3,6 @@ if exists('g:autoloaded_exchange')
 endif
 let g:autoloaded_exchange = 1
 
-let s:enable_highlighting = 1
-
 " Interface {{{1
 fu! exchange#clear() abort "{{{2
     unlet! b:exchange
@@ -12,11 +10,6 @@ fu! exchange#clear() abort "{{{2
         call s:highlight_clear(b:exchange_matches)
         unlet b:exchange_matches
     endif
-endfu
-
-fu! exchange#highlight_toggle(...) abort "{{{2
-    let s:enable_highlighting = a:0 ? a:1 : !s:enable_highlighting
-    exe 'hi link _exchange_region '.(s:enable_highlighting ? 'ExchangeRegion' : 'None')
 endfu
 
 fu! exchange#set(type, ...) abort "{{{2
@@ -238,7 +231,7 @@ endfu
 
 fu! s:highlight_region(region) abort "{{{2
     let pat = '\%'.a:region[0].'l\%'.a:region[1].'v\_.\{-}\%'.a:region[2].'l\(\%>'.a:region[3].'v\|$\)'
-    return matchadd('_exchange_region', pat)
+    return matchadd('ExchangeRegion', pat)
 endfu
 
 fu! s:reindent(start, lines, new_indent) abort "{{{2
