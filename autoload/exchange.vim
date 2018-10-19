@@ -46,7 +46,7 @@ endfu
 " Core {{{1
 fu! s:apply_type(pos, type) abort "{{{2
     let pos = a:pos
-    if a:type ==# 'V'
+    if a:type is# 'V'
         let pos.column = col([pos.line, '$'])
     endif
     return pos
@@ -102,7 +102,7 @@ fu! s:exchange(x, y, reverse, expand) abort "{{{2
     set selection=inclusive
 
     " Compare using =~ because "'==' != 0" returns 0
-    let indent = s:get_setting('exchange_indent', 1) !~ 0 && a:x.type ==# 'V' && a:y.type ==# 'V'
+    let indent = s:get_setting('exchange_indent', 1) !~ 0 && a:x.type is# 'V' && a:y.type is# 'V'
 
     if indent
         let xindent = matchstr(getline(nextnonblank(a:y.start.line)), '^\s*')
@@ -153,7 +153,7 @@ fu! s:exchange_get(type, vis) abort "{{{2
         let type = a:type
         let [start, end] = s:store_pos("'<", "'>")
          sil norm! gvy
-        if &selection ==# 'exclusive' && start != end
+        if &selection is# 'exclusive' && start != end
             let end.column -= len(matchstr(@@, '\_.$'))
         endif
     else
@@ -211,10 +211,10 @@ fu! s:highlight(exchange) abort "{{{2
         let regions += map(range(a:exchange.start.line, a:exchange.end.line), '[v:val, blockstartcol, v:val, blockendcol]')
     else
         let [startline, endline] = [a:exchange.start.line, a:exchange.end.line]
-        if a:exchange.type ==# 'v'
+        if a:exchange.type is# 'v'
             let startcol = virtcol([a:exchange.start.line, a:exchange.start.column])
             let endcol = virtcol([a:exchange.end.line, a:exchange.end.column])
-        elseif a:exchange.type ==# 'V'
+        elseif a:exchange.type is# 'V'
             let startcol = 1
             let endcol = virtcol([a:exchange.end.line, '$'])
         endif
