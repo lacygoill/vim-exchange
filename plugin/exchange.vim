@@ -18,7 +18,7 @@ let g:loaded_exchange = 1
 "
 " Uncomment them, and try to exchange their position by pressing `cxip` on both.
 " One of them is mangled.
-" I think it's due to the multibyte characters used in the diagram.
+" I think it's due to the multi-byte characters used in the diagram.
 "}}}
 
 " Mappings {{{1
