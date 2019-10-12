@@ -4,7 +4,7 @@ endif
 let g:autoloaded_exchange = 1
 
 " Interface {{{1
-fu! exchange#clear() abort "{{{2
+fu exchange#clear() abort "{{{2
     unlet! b:exchange
     if exists('b:exchange_matches')
         call s:highlight_clear(b:exchange_matches)
@@ -12,7 +12,7 @@ fu! exchange#clear() abort "{{{2
     endif
 endfu
 
-fu! exchange#set(type, ...) abort "{{{2
+fu exchange#set(type, ...) abort "{{{2
     if !exists('b:exchange')
         let b:exchange = s:exchange_get(a:type, a:0)
         let b:exchange_matches = s:highlight(b:exchange)
@@ -44,7 +44,7 @@ fu! exchange#set(type, ...) abort "{{{2
 endfu
 
 " Core {{{1
-fu! s:apply_type(pos, type) abort "{{{2
+fu s:apply_type(pos, type) abort "{{{2
     let pos = a:pos
     if a:type is# 'V'
         let pos.column = col([pos.line, '$'])
@@ -52,7 +52,7 @@ fu! s:apply_type(pos, type) abort "{{{2
     return pos
 endfu
 
-fu! s:compare(x, y) abort "{{{2
+fu s:compare(x, y) abort "{{{2
 " Return < 0 if x comes before y in buffer,
 "        = 0 if x and y overlap in buffer,
 "        > 0 if x comes after y in buffer
@@ -85,7 +85,7 @@ fu! s:compare(x, y) abort "{{{2
     return cmp == 0 ? 'overlap' : cmp < 0 ? 'lt' : 'gt'
 endfu
 
-fu! s:compare_pos(x, y) abort "{{{2
+fu s:compare_pos(x, y) abort "{{{2
     if a:x.line == a:y.line
         return a:x.column - a:y.column
     else
@@ -93,7 +93,7 @@ fu! s:compare_pos(x, y) abort "{{{2
     endif
 endfu
 
-fu! s:exchange(x, y, reverse, expand) abort "{{{2
+fu s:exchange(x, y, reverse, expand) abort "{{{2
     let reg_z = s:save_reg('z')
     let reg_unnamed = s:save_reg('"')
     let reg_star = s:save_reg('*')
@@ -145,7 +145,7 @@ fu! s:exchange(x, y, reverse, expand) abort "{{{2
     call s:restore_reg('+', reg_plus)
 endfu
 
-fu! s:exchange_get(type, vis) abort "{{{2
+fu s:exchange_get(type, vis) abort "{{{2
     let reg = s:save_reg('"')
     let reg_star = s:save_reg('*')
     let reg_plus = s:save_reg('+')
@@ -186,7 +186,7 @@ fu! s:exchange_get(type, vis) abort "{{{2
     \ }
 endfu
 
-fu! s:fix_cursor(x, y, reverse) abort "{{{2
+fu s:fix_cursor(x, y, reverse) abort "{{{2
     if a:reverse
         call cursor(a:x.start.line, a:x.start.column)
     else
@@ -200,7 +200,7 @@ fu! s:fix_cursor(x, y, reverse) abort "{{{2
     endif
 endfu
 
-fu! s:highlight(exchange) abort "{{{2
+fu s:highlight(exchange) abort "{{{2
     let regions = []
     if a:exchange.type == "\<c-V>"
         let blockstartcol = virtcol([a:exchange.start.line, a:exchange.start.column])
@@ -223,18 +223,18 @@ fu! s:highlight(exchange) abort "{{{2
     return map(regions, 's:highlight_region(v:val)')
 endfu
 
-fu! s:highlight_clear(match) abort "{{{2
+fu s:highlight_clear(match) abort "{{{2
     for m in a:match
          sil! call matchdelete(m)
     endfor
 endfu
 
-fu! s:highlight_region(region) abort "{{{2
+fu s:highlight_region(region) abort "{{{2
     let pat = '\%'.a:region[0].'l\%'.a:region[1].'v\_.\{-}\%'.a:region[2].'l\(\%>'.a:region[3].'v\|$\)'
     return matchadd('ExchangeRegion', pat)
 endfu
 
-fu! s:reindent(start, lines, new_indent) abort "{{{2
+fu s:reindent(start, lines, new_indent) abort "{{{2
     if s:get_setting('exchange_indent', 1) == '=='
         let lnum = nextnonblank(a:start)
         if lnum == 0 || lnum > a:start + a:lines - 1
@@ -272,7 +272,7 @@ fu! s:reindent(start, lines, new_indent) abort "{{{2
 endfu
 
 " Util {{{1
-fu! s:intersects(x, y) abort "{{{2
+fu s:intersects(x, y) abort "{{{2
     if a:x.end.column < a:y.start.column || a:x.end.line < a:y.start.line
     \	|| a:x.start.column > a:y.end.column || a:x.start.line > a:y.end.line
         return 0
@@ -281,11 +281,11 @@ fu! s:intersects(x, y) abort "{{{2
     endif
 endfu
 
-fu! s:get_setting(setting, default) abort "{{{2
+fu s:get_setting(setting, default) abort "{{{2
     return get(b:, a:setting, get(g:, a:setting, a:default))
 endfu
 
-fu! s:getpos(mark) abort "{{{2
+fu s:getpos(mark) abort "{{{2
     let pos = getpos(a:mark)
     let result = {}
     return {
@@ -296,11 +296,11 @@ fu! s:getpos(mark) abort "{{{2
     \ }
 endfu
 
-fu! s:setpos(mark, pos) abort "{{{2
+fu s:setpos(mark, pos) abort "{{{2
     call setpos(a:mark, [a:pos.buffer, a:pos.line, a:pos.column, a:pos.offset])
 endfu
 
-fu! s:save_reg(name) abort "{{{2
+fu s:save_reg(name) abort "{{{2
     try
         return [getreg(a:name), getregtype(a:name)]
     catch /.*/
@@ -308,11 +308,11 @@ fu! s:save_reg(name) abort "{{{2
     endtry
 endfu
 
-fu! s:restore_reg(name, reg) abort "{{{2
+fu s:restore_reg(name, reg) abort "{{{2
      sil! call setreg(a:name, a:reg[0], a:reg[1])
 endfu
 
-fu! s:store_pos(start, end) abort "{{{2
+fu s:store_pos(start, end) abort "{{{2
     return [s:getpos(a:start), s:getpos(a:end)]
 endfu
 
