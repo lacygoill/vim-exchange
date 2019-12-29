@@ -309,6 +309,7 @@ fu s:save_reg(name) abort "{{{2
 endfu
 
 fu s:restore_reg(name, reg) abort "{{{2
+     " `silent!` because of https://github.com/tommcdo/vim-exchange/issues/31
      sil! call setreg(a:name, a:reg[0], a:reg[1])
 endfu
 
