@@ -23,11 +23,11 @@ let g:loaded_exchange = 1
 
 " Mappings {{{1
 
-nno <expr><silent><unique> cx  ':<c-u>set opfunc=exchange#set<cr>'.(v:count1 == 1 ? '' : v:count1).'g@'
+nno <expr><silent><unique> cx  ':<c-u>set opfunc=exchange#set<cr>'..(v:count1 == 1 ? '' : v:count1)..'g@'
 xno <silent><unique>       X    :<c-u>call exchange#set(visualmode(), 1)<cr>
 nno <silent><unique>       cxc  :<c-u>call exchange#clear()<cr>
 nno <silent><unique>       cxx  :<c-u>set opfunc=exchange#set
-                                \<bar>exe 'norm! '.(v:count1 == 1 ? '' : v:count1).'g@_'<cr>
+                                \<bar>exe 'norm! '..(v:count1 == 1 ? '' : v:count1)..'g@_'<cr>
 
 " HG {{{1
 
