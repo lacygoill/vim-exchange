@@ -42,7 +42,7 @@ fu exchange#set(type, ...) abort "{{{2
         call exchange#clear()
     endif
 endfu
-
+"}}}1
 " Core {{{1
 fu s:apply_type(pos, type) abort "{{{2
     let pos = a:pos
@@ -114,13 +114,13 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
     call s:setpos("'[", a:y.start)
     call s:setpos("']", a:y.end)
     call setreg('z', a:x.text, a:x.type)
-     sil exe "norm! `[" . a:y.type . "`]\"zp"
+     sil exe "norm! `["..a:y.type.."`]\"zp"
 
     if !a:expand
         call s:setpos("'[", a:x.start)
         call s:setpos("']", a:x.end)
         call setreg('z', a:y.text, a:y.type)
-         sil exe "norm! `[" . a:x.type . "`]\"zp"
+         sil exe "norm! `["..a:x.type.."`]\"zp"
     endif
 
     if indent
@@ -230,7 +230,7 @@ fu s:highlight_clear(match) abort "{{{2
 endfu
 
 fu s:highlight_region(region) abort "{{{2
-    let pat = '\%'.a:region[0].'l\%'.a:region[1].'v\_.\{-}\%'.a:region[2].'l\(\%>'.a:region[3].'v\|$\)'
+    let pat = '\%'..a:region[0]..'l\%'..a:region[1]..'v\_.\{-}\%'..a:region[2]..'l\(\%>'..a:region[3]..'v\|$\)'
     return matchadd('ExchangeRegion', pat)
 endfu
 
@@ -241,7 +241,7 @@ fu s:reindent(start, lines, new_indent) abort "{{{2
             return
         endif
         let line = getline(lnum)
-        exe " sil norm! " . lnum . "G=="
+        exe " sil norm! "..lnum.."G=="
         let new_indent = matchstr(getline(lnum), '^\s*')
         call setline(lnum, line)
     else
@@ -251,7 +251,7 @@ fu s:reindent(start, lines, new_indent) abort "{{{2
     if strdisplaywidth(new_indent) > strdisplaywidth(indent)
         for lnum in range(a:start, a:start + a:lines - 1)
             if lnum =~ '\S'
-                call setline(lnum, new_indent . getline(lnum)[len(indent):])
+                call setline(lnum, new_indent..getline(lnum)[len(indent):])
             endif
         endfor
     elseif strdisplaywidth(new_indent) < strdisplaywidth(indent)
@@ -264,13 +264,13 @@ fu s:reindent(start, lines, new_indent) abort "{{{2
         if can_dedent
             for lnum in range(a:start, a:start + a:lines - 1)
                 if stridx(getline(lnum), new_indent) == 0
-                    call setline(lnum, new_indent . getline(lnum)[len(indent):])
+                    call setline(lnum, new_indent..getline(lnum)[len(indent):])
                 endif
             endfor
         endif
     endif
 endfu
-
+"}}}1
 " Util {{{1
 fu s:intersects(x, y) abort "{{{2
     if a:x.end.column < a:y.start.column || a:x.end.line < a:y.start.line
@@ -303,7 +303,7 @@ endfu
 fu s:save_reg(name) abort "{{{2
     try
         return [getreg(a:name), getregtype(a:name)]
-    catch /.*/
+    catch
         return ['', '']
     endtry
 endfu
