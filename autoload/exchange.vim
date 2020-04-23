@@ -1,8 +1,3 @@
-if exists('g:autoloaded_exchange')
-    finish
-endif
-let g:autoloaded_exchange = 1
-
 " Interface {{{1
 fu exchange#clear() abort "{{{2
     unlet! b:exchange
@@ -26,7 +21,7 @@ fu exchange#set(type, ...) abort "{{{2
 
         let cmp = s:compare(exchange1, exchange2)
         if cmp == 'overlap'
-            echohl WarningMsg | echo "Exchange aborted: overlapping text" | echohl None
+            echohl WarningMsg | echo 'Exchange aborted: overlapping text' | echohl None
             return exchange#clear()
         elseif cmp == 'outer'
             let [expand, reverse] = [1, 1]
@@ -76,7 +71,7 @@ fu s:compare(x, y) abort "{{{2
     elseif s:compare_pos(a:y.start, a:x.start) <= 0 && s:compare_pos(a:y.end, a:x.end) >= 0
         return 'inner'
     elseif (s:compare_pos(a:x.start, a:y.end) <= 0 && s:compare_pos(a:y.start, a:x.end) <= 0)
-    \	|| (s:compare_pos(a:y.start, a:x.end) <= 0 && s:compare_pos(a:x.start, a:y.end) <= 0)
+    \   || (s:compare_pos(a:y.start, a:x.end) <= 0 && s:compare_pos(a:x.start, a:y.end) <= 0)
         " x and y overlap in buffer.
         return 'overlap'
     endif
@@ -154,7 +149,7 @@ fu s:exchange_get(type, vis) abort "{{{2
         let [start, end] = s:store_pos("'<", "'>")
          sil norm! gvy
         if &selection is# 'exclusive' && start != end
-            let end.column -= len(matchstr(@@, '\_.$'))
+            let end.column -= strlen(matchstr(@@, '\_.$'))
         endif
     else
         let selection = &selection
@@ -162,7 +157,7 @@ fu s:exchange_get(type, vis) abort "{{{2
         if a:type == 'line'
             let type = 'V'
             let [start, end] = s:store_pos("'[", "']")
-             sil exe "norm! '[V']y"
+             sil norm! '[V']y
         elseif a:type == 'block'
             let type = "\<c-V>"
             let [start, end] = s:store_pos("'[", "']")
@@ -170,7 +165,7 @@ fu s:exchange_get(type, vis) abort "{{{2
         else
             let type = 'v'
             let [start, end] = s:store_pos("'[", "']")
-             sil exe "norm! `[v`]y"
+             sil norm! `[v`]y
         endif
         let &selection = selection
     endif
@@ -179,10 +174,10 @@ fu s:exchange_get(type, vis) abort "{{{2
     call s:restore_reg('*', reg_star)
     call s:restore_reg('+', reg_plus)
     return {
-    \	'text': text,
-    \	'type': type,
-    \	'start': start,
-    \	'end': s:apply_type(end, type)
+    \   'text': text,
+    \   'type': type,
+    \   'start': start,
+    \   'end': s:apply_type(end, type)
     \ }
 endfu
 
@@ -202,7 +197,7 @@ endfu
 
 fu s:highlight(exchange) abort "{{{2
     let regions = []
-    if a:exchange.type == "\<c-V>"
+    if a:exchange.type is# "\<c-v>"
         let blockstartcol = virtcol([a:exchange.start.line, a:exchange.start.column])
         let blockendcol = virtcol([a:exchange.end.line, a:exchange.end.column])
         if blockstartcol > blockendcol
@@ -251,7 +246,7 @@ fu s:reindent(start, lines, new_indent) abort "{{{2
     if strdisplaywidth(new_indent) > strdisplaywidth(indent)
         for lnum in range(a:start, a:start + a:lines - 1)
             if lnum =~ '\S'
-                call setline(lnum, new_indent..getline(lnum)[len(indent):])
+                call setline(lnum, new_indent..getline(lnum)[strlen(indent):])
             endif
         endfor
     elseif strdisplaywidth(new_indent) < strdisplaywidth(indent)
@@ -264,7 +259,7 @@ fu s:reindent(start, lines, new_indent) abort "{{{2
         if can_dedent
             for lnum in range(a:start, a:start + a:lines - 1)
                 if stridx(getline(lnum), new_indent) == 0
-                    call setline(lnum, new_indent..getline(lnum)[len(indent):])
+                    call setline(lnum, new_indent..getline(lnum)[strlen(indent):])
                 endif
             endfor
         endif
@@ -273,12 +268,8 @@ endfu
 "}}}1
 " Util {{{1
 fu s:intersects(x, y) abort "{{{2
-    if a:x.end.column < a:y.start.column || a:x.end.line < a:y.start.line
-    \	|| a:x.start.column > a:y.end.column || a:x.start.line > a:y.end.line
-        return 0
-    else
-        return 1
-    endif
+    return a:x.end.column >= a:y.start.column && a:x.end.line >= a:y.start.line
+        \ && a:x.start.column <= a:y.end.column && a:x.start.line <= a:y.end.line
 endfu
 
 fu s:get_setting(setting, default) abort "{{{2
@@ -289,10 +280,10 @@ fu s:getpos(mark) abort "{{{2
     let pos = getpos(a:mark)
     let result = {}
     return {
-    \	'buffer': pos[0],
-    \	'line': pos[1],
-    \	'column': pos[2],
-    \	'offset': pos[3]
+    \   'buffer': pos[0],
+    \   'line': pos[1],
+    \   'column': pos[2],
+    \   'offset': pos[3]
     \ }
 endfu
 
