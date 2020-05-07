@@ -11,7 +11,8 @@ fu exchange#set(type, ...) abort "{{{2
     if !exists('b:exchange')
         let b:exchange = s:exchange_get(a:type, a:0)
         let b:exchange_matches = s:highlight(b:exchange)
-        " Tell tpope/vim-repeat that '.' should repeat the Exchange motion
+        " tell vim-repeat that '.' should repeat the Exchange motion
+        " https://github.com/tommcdo/vim-exchange/pull/32#issuecomment-69509516
          sil! call repeat#invalidate()
     else
         let exchange1 = b:exchange
