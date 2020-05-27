@@ -38,11 +38,11 @@ let g:loaded_exchange = 1
 
 " Mappings {{{1
 
-nno <expr><silent><unique> cx  ':<c-u>set opfunc=exchange#set<cr>'..(v:count1 == 1 ? '' : v:count1)..'g@'
-xno <silent><unique>       X    :<c-u>call exchange#set(visualmode(), 1)<cr>
-nno <silent><unique>       cxc  :<c-u>call exchange#clear()<cr>
-nno <silent><unique>       cxx  :<c-u>set opfunc=exchange#set
-                                \<bar>exe 'norm! '..(v:count1 == 1 ? '' : v:count1)..'g@_'<cr>
+nno <expr><unique> cx exchange#setup()
+nno <expr><unique> cxx exchange#setup()..'_'
+xno <expr><unique> X exchange#setup()
+
+nno <silent><unique> cxc :<c-u>call exchange#clear()<cr>
 
 " HG {{{1
 

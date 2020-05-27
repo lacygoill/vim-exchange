@@ -7,16 +7,21 @@ fu exchange#clear() abort "{{{2
     endif
 endfu
 
-fu exchange#set(type, ...) abort "{{{2
+fu exchange#setup() abort "{{{2
+    let &opfunc = 'exchange#op'
+    return 'g@'
+endfu
+
+fu exchange#op(type) abort "{{{2
     if !exists('b:exchange')
-        let b:exchange = s:exchange_get(a:type, a:0)
+        let b:exchange = s:exchange_get(a:type)
         let b:exchange_matches = s:highlight(b:exchange)
         " tell vim-repeat that '.' should repeat the Exchange motion
         " https://github.com/tommcdo/vim-exchange/pull/32#issuecomment-69509516
          sil! call repeat#invalidate()
     else
         let exchange1 = b:exchange
-        let exchange2 = s:exchange_get(a:type, a:0)
+        let exchange2 = s:exchange_get(a:type)
         let reverse = 0
         let expand = 0
 
@@ -141,35 +146,26 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
     call s:restore_reg('+', reg_plus)
 endfu
 
-fu s:exchange_get(type, vis) abort "{{{2
+fu s:exchange_get(type) abort "{{{2
     let reg = s:save_reg('"')
     let reg_star = s:save_reg('*')
     let reg_plus = s:save_reg('+')
-    if a:vis
-        let type = a:type
-        let [start, end] = s:store_pos("'<", "'>")
-         sil norm! gvy
-        if &selection is# 'exclusive' && start != end
-            let end.column -= strlen(matchstr(@@, '\_.$'))
-        endif
+    let selection = &selection
+    let &selection = 'inclusive'
+    if a:type == 'line'
+        let type = 'V'
+        let [start, end] = s:store_pos("'[", "']")
+         sil norm! '[V']y
+    elseif a:type == 'block'
+        let type = "\<c-V>"
+        let [start, end] = s:store_pos("'[", "']")
+         sil exe "norm! `[\<c-V>`]y"
     else
-        let selection = &selection
-        let &selection = 'inclusive'
-        if a:type == 'line'
-            let type = 'V'
-            let [start, end] = s:store_pos("'[", "']")
-             sil norm! '[V']y
-        elseif a:type == 'block'
-            let type = "\<c-V>"
-            let [start, end] = s:store_pos("'[", "']")
-             sil exe "norm! `[\<c-V>`]y"
-        else
-            let type = 'v'
-            let [start, end] = s:store_pos("'[", "']")
-             sil norm! `[v`]y
-        endif
-        let &selection = selection
+        let type = 'v'
+        let [start, end] = s:store_pos("'[", "']")
+         sil norm! `[v`]y
     endif
+    let &selection = selection
     let text = getreg('@')
     call s:restore_reg('"', reg)
     call s:restore_reg('*', reg_star)
