@@ -7,21 +7,21 @@ fu exchange#clear() abort "{{{2
     endif
 endfu
 
-fu exchange#setup() abort "{{{2
-    let &opfunc = 'exchange#op'
-    return 'g@'
-endfu
-
-fu exchange#op(type) abort "{{{2
+fu exchange#op(...) abort "{{{2
+    if !a:0
+        let &opfunc = 'exchange#op'
+        return 'g@'
+    endif
+    let type = a:1
     if !exists('b:exchange')
-        let b:exchange = s:exchange_get(a:type)
+        let b:exchange = s:exchange_get(type)
         let b:exchange_matches = s:highlight(b:exchange)
         " tell vim-repeat that '.' should repeat the Exchange motion
         " https://github.com/tommcdo/vim-exchange/pull/32#issuecomment-69509516
          sil! call repeat#invalidate()
     else
         let exchange1 = b:exchange
-        let exchange2 = s:exchange_get(a:type)
+        let exchange2 = s:exchange_get(type)
         let reverse = 0
         let expand = 0
 
@@ -97,8 +97,6 @@ endfu
 fu s:exchange(x, y, reverse, expand) abort "{{{2
     let reg_z = s:save_reg('z')
     let reg_unnamed = s:save_reg('"')
-    let reg_star = s:save_reg('*')
-    let reg_plus = s:save_reg('+')
     let selection = &selection
     set selection=inclusive
 
@@ -142,14 +140,10 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
     let &selection = selection
     call s:restore_reg('z', reg_z)
     call s:restore_reg('"', reg_unnamed)
-    call s:restore_reg('*', reg_star)
-    call s:restore_reg('+', reg_plus)
 endfu
 
 fu s:exchange_get(type) abort "{{{2
     let reg = s:save_reg('"')
-    let reg_star = s:save_reg('*')
-    let reg_plus = s:save_reg('+')
     let selection = &selection
     let &selection = 'inclusive'
     if a:type == 'line'
@@ -166,10 +160,8 @@ fu s:exchange_get(type) abort "{{{2
          sil norm! `[v`]y
     endif
     let &selection = selection
-    let text = getreg('@')
+    let text = getreg('"', 1, 1)
     call s:restore_reg('"', reg)
-    call s:restore_reg('*', reg_star)
-    call s:restore_reg('+', reg_plus)
     return {
     \   'text': text,
     \   'type': type,
@@ -290,7 +282,7 @@ endfu
 
 fu s:save_reg(name) abort "{{{2
     try
-        return [getreg(a:name), getregtype(a:name)]
+        return [getreg(a:name, 1, 1), getregtype(a:name)]
     catch
         return ['', '']
     endtry
