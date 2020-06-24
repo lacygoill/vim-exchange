@@ -59,7 +59,7 @@ fu s:compare(x, y) abort "{{{2
 "        > 0 if x comes after y in buffer
 
     " Compare two blockwise regions.
-    if a:x.type == "\<c-V>" && a:y.type == "\<c-V>"
+    if a:x.type == "\<c-v>" && a:y.type == "\<c-v>"
         if s:intersects(a:x, a:y)
             return 'overlap'
         endif
@@ -97,8 +97,7 @@ endfu
 fu s:exchange(x, y, reverse, expand) abort "{{{2
     let reg_z = s:save_reg('z')
     let reg_unnamed = s:save_reg('"')
-    let selection = &selection
-    set selection=inclusive
+    let sel_save = &sel | set sel=inclusive
 
     " Compare using =~ because "'==' != 0" returns 0
     let indent = s:get_setting('exchange_indent', 1) !~ 0 && a:x.type is# 'V' && a:y.type is# 'V'
@@ -112,14 +111,14 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
 
     call s:setpos("'[", a:y.start)
     call s:setpos("']", a:y.end)
-    call setreg('z', a:x.text, a:x.type)
-     sil exe "norm! `["..a:y.type.."`]\"zp"
+    call setreg('z', a:x.reginfo)
+    sil exe "norm! `["..a:y.type.."`]\"zp"
 
     if !a:expand
         call s:setpos("'[", a:x.start)
         call s:setpos("']", a:x.end)
-        call setreg('z', a:y.text, a:y.type)
-         sil exe "norm! `["..a:x.type.."`]\"zp"
+        call setreg('z', a:y.reginfo)
+        sil exe "norm! `["..a:x.type.."`]\"zp"
     endif
 
     if indent
@@ -137,37 +136,36 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
         call s:fix_cursor(a:x, a:y, a:reverse)
     endif
 
-    let &selection = selection
+    let &sel = sel_save
     call s:restore_reg('z', reg_z)
     call s:restore_reg('"', reg_unnamed)
 endfu
 
 fu s:exchange_get(type) abort "{{{2
-    let reg = s:save_reg('"')
-    let selection = &selection
-    let &selection = 'inclusive'
+    let reg_save = s:save_reg('"')
+    let sel_save = &sel | set sel=inclusive
     if a:type == 'line'
         let type = 'V'
         let [start, end] = s:store_pos("'[", "']")
          sil norm! '[V']y
     elseif a:type == 'block'
-        let type = "\<c-V>"
+        let type = "\<c-v>"
         let [start, end] = s:store_pos("'[", "']")
-         sil exe "norm! `[\<c-V>`]y"
+         sil exe "norm! `[\<c-v>`]y"
     else
         let type = 'v'
         let [start, end] = s:store_pos("'[", "']")
          sil norm! `[v`]y
     endif
-    let &selection = selection
-    let text = getreg('"', 1, 1)
-    call s:restore_reg('"', reg)
+    let &sel = sel_save
+    let reg_yank = getreginfo('"')
+    call s:restore_reg('"', reg_save)
     return {
-    \   'text': text,
-    \   'type': type,
-    \   'start': start,
-    \   'end': s:apply_type(end, type)
-    \ }
+        \ 'reginfo': reg_yank,
+        \ 'type': type,
+        \ 'start': start,
+        \ 'end': s:apply_type(end, type)
+        \ }
 endfu
 
 fu s:fix_cursor(x, y, reverse) abort "{{{2
@@ -282,7 +280,7 @@ endfu
 
 fu s:save_reg(name) abort "{{{2
     try
-        return [getreg(a:name, 1, 1), getregtype(a:name)]
+        return getreginfo(a:name)
     catch
         return ['', '']
     endtry
@@ -290,7 +288,7 @@ endfu
 
 fu s:restore_reg(name, reg) abort "{{{2
      " `silent!` because of https://github.com/tommcdo/vim-exchange/issues/31
-     sil! call setreg(a:name, a:reg[0], a:reg[1])
+     sil! call setreg(a:name, a:reg)
 endfu
 
 fu s:store_pos(start, end) abort "{{{2
