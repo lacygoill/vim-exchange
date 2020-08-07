@@ -77,7 +77,7 @@ fu s:compare(x, y) abort "{{{2
     elseif s:compare_pos(a:y.start, a:x.start) <= 0 && s:compare_pos(a:y.end, a:x.end) >= 0
         return 'inner'
     elseif (s:compare_pos(a:x.start, a:y.end) <= 0 && s:compare_pos(a:y.start, a:x.end) <= 0)
-    \   || (s:compare_pos(a:y.start, a:x.end) <= 0 && s:compare_pos(a:x.start, a:y.end) <= 0)
+      \ || (s:compare_pos(a:y.start, a:x.end) <= 0 && s:compare_pos(a:x.start, a:y.end) <= 0)
         " x and y overlap in buffer.
         return 'overlap'
     endif
@@ -103,8 +103,8 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
     let indent = s:get_setting('exchange_indent', 1) !~ 0 && a:x.type is# 'V' && a:y.type is# 'V'
 
     if indent
-        let xindent = matchstr(getline(nextnonblank(a:y.start.line)), '^\s*')
-        let yindent = matchstr(getline(nextnonblank(a:x.start.line)), '^\s*')
+        let xindent = nextnonblank(a:y.start.line)->getline()->matchstr('^\s*')
+        let yindent = nextnonblank(a:x.start.line)->getline()->matchstr('^\s*')
     endif
 
     let view = winsaveview()
@@ -112,13 +112,13 @@ fu s:exchange(x, y, reverse, expand) abort "{{{2
     call s:setpos("'[", a:y.start)
     call s:setpos("']", a:y.end)
     call setreg('z', a:x.reginfo)
-    sil exe "norm! `["..a:y.type.."`]\"zp"
+    sil exe "norm! `[" .. a:y.type .. "`]\"zp"
 
     if !a:expand
         call s:setpos("'[", a:x.start)
         call s:setpos("']", a:x.end)
         call setreg('z', a:y.reginfo)
-        sil exe "norm! `["..a:x.type.."`]\"zp"
+        sil exe "norm! `[" .. a:x.type .. "`]\"zp"
     endif
 
     if indent
@@ -190,7 +190,8 @@ fu s:highlight(exchange) abort "{{{2
         if blockstartcol > blockendcol
             let [blockstartcol, blockendcol] = [blockendcol, blockstartcol]
         endif
-        let regions += map(range(a:exchange.start.line, a:exchange.end.line), '[v:val, blockstartcol, v:val, blockendcol]')
+        let regions += range(a:exchange.start.line, a:exchange.end.line)
+            \ ->map('[v:val, blockstartcol, v:val, blockendcol]')
     else
         let [startline, endline] = [a:exchange.start.line, a:exchange.end.line]
         if a:exchange.type is# 'v'
@@ -212,7 +213,7 @@ fu s:highlight_clear(match) abort "{{{2
 endfu
 
 fu s:highlight_region(region) abort "{{{2
-    let pat = '\%'..a:region[0]..'l\%'..a:region[1]..'v\_.\{-}\%'..a:region[2]..'l\(\%>'..a:region[3]..'v\|$\)'
+    let pat = '\%' .. a:region[0] .. 'l\%' .. a:region[1] .. 'v\_.\{-}\%' .. a:region[2] .. 'l\(\%>' .. a:region[3] .. 'v\|$\)'
     return matchadd('ExchangeRegion', pat)
 endfu
 
@@ -223,30 +224,30 @@ fu s:reindent(start, lines, new_indent) abort "{{{2
             return
         endif
         let line = getline(lnum)
-        exe " sil norm! "..lnum.."G=="
-        let new_indent = matchstr(getline(lnum), '^\s*')
+        exe " sil norm! " .. lnum .. "G=="
+        let new_indent = getline(lnum)->matchstr('^\s*')
         call setline(lnum, line)
     else
         let new_indent = a:new_indent
     endif
-    let indent = matchstr(getline(nextnonblank(a:start)), '^\s*')
+    let indent = nextnonblank(a:start)->getline()->matchstr('^\s*')
     if strdisplaywidth(new_indent) > strdisplaywidth(indent)
         for lnum in range(a:start, a:start + a:lines - 1)
             if lnum =~ '\S'
-                call setline(lnum, new_indent..getline(lnum)[strlen(indent):])
+                call setline(lnum, new_indent .. getline(lnum)[strlen(indent):])
             endif
         endfor
     elseif strdisplaywidth(new_indent) < strdisplaywidth(indent)
         let can_dedent = 1
         for lnum in range(a:start, a:start + a:lines - 1)
-            if stridx(getline(lnum), new_indent) != 0 && nextnonblank(lnum) == lnum
+            if getline(lnum)->stridx(new_indent) != 0 && nextnonblank(lnum) == lnum
                 let can_dedent = 0
             endif
         endfor
         if can_dedent
             for lnum in range(a:start, a:start + a:lines - 1)
-                if stridx(getline(lnum), new_indent) == 0
-                    call setline(lnum, new_indent..getline(lnum)[strlen(indent):])
+                if getline(lnum)->stridx(new_indent) == 0
+                    call setline(lnum, new_indent .. getline(lnum)[strlen(indent):])
                 endif
             endfor
         endif
@@ -267,11 +268,11 @@ fu s:getpos(mark) abort "{{{2
     let pos = getpos(a:mark)
     let result = {}
     return {
-    \   'buffer': pos[0],
-    \   'line': pos[1],
-    \   'column': pos[2],
-    \   'offset': pos[3]
-    \ }
+        \ 'buffer': pos[0],
+        \ 'line': pos[1],
+        \ 'column': pos[2],
+        \ 'offset': pos[3]
+        \ }
 endfu
 
 fu s:setpos(mark, pos) abort "{{{2

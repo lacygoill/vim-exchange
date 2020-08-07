@@ -39,7 +39,7 @@ let g:loaded_exchange = 1
 " Mappings {{{1
 
 nno <expr><unique> cx exchange#op()
-nno <expr><unique> cxx exchange#op()..'_'
+nno <expr><unique> cxx exchange#op() .. '_'
 xno <expr><unique> X exchange#op()
 
 nno <silent><unique> cxc :<c-u>call exchange#clear()<cr>
