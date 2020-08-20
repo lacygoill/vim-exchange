@@ -55,8 +55,8 @@ endfu
 
 fu s:compare(x, y) abort "{{{2
 " Return < 0 if x comes before y in buffer,
-"        = 0 if x and y overlap in buffer,
-"        > 0 if x comes after y in buffer
+"        = 0 if x and y overlap in buffer,
+"        > 0 if x comes after y in buffer
 
     " Compare two blockwise regions.
     if a:x.type == "\<c-v>" && a:y.type == "\<c-v>"
