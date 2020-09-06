@@ -214,7 +214,7 @@ endfu
 
 fu s:highlight_region(region) abort "{{{2
     let pat = '\%' .. a:region[0] .. 'l\%' .. a:region[1] .. 'v\_.\{-}\%' .. a:region[2] .. 'l\(\%>' .. a:region[3] .. 'v\|$\)'
-    return matchadd('ExchangeRegion', pat)
+    return matchadd('ExchangeRegion', pat, 0)
 endfu
 
 fu s:reindent(start, lines, new_indent) abort "{{{2
