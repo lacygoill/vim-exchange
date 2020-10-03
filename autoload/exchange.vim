@@ -3,7 +3,7 @@ fu exchange#clear() abort "{{{2
     unlet! b:exchange
     if exists('b:exchange_matches')
         call s:highlight_clear(b:exchange_matches)
-        unlet b:exchange_matches
+        unlet! b:exchange_matches
     endif
 endfu
 
