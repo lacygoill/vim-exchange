@@ -15,7 +15,7 @@ fu exchange#op(...) abort "{{{2
     let type = a:1
     if !exists('b:exchange')
         let b:exchange = s:exchange_get(type)
-        let b:exchange_matches = s:highlight(b:exchange)
+        let b:exchange_matches = s:Highlight(b:exchange)
         " tell vim-repeat that '.' should repeat the Exchange motion
         " https://github.com/tommcdo/vim-exchange/pull/32#issuecomment-69509516
          sil! call repeat#invalidate()
@@ -182,29 +182,33 @@ fu s:fix_cursor(x, y, reverse) abort "{{{2
     endif
 endfu
 
-fu s:highlight(exchange) abort "{{{2
-    let regions = []
-    if a:exchange.type is# "\<c-v>"
-        let blockstartcol = virtcol([a:exchange.start.line, a:exchange.start.column])
-        let blockendcol = virtcol([a:exchange.end.line, a:exchange.end.column])
+def s:Highlight(exchange: dict<any>): any #{{{2
+    var regions: list<list<number>> = []
+    if exchange.type == "\<c-v>"
+        var blockstartcol = virtcol([exchange.start.line, exchange.start.column])
+        var blockendcol = virtcol([exchange.end.line, exchange.end.column])
         if blockstartcol > blockendcol
-            let [blockstartcol, blockendcol] = [blockendcol, blockstartcol]
+            [blockstartcol, blockendcol] = [blockendcol, blockstartcol]
         endif
-        let regions += range(a:exchange.start.line, a:exchange.end.line)
-            \ ->map('[v:val, blockstartcol, v:val, blockendcol]')
+        regions += range(exchange.start.line, exchange.end.line)
+            ->map({_, v -> [v, blockstartcol, v, blockendcol]})
     else
-        let [startline, endline] = [a:exchange.start.line, a:exchange.end.line]
-        if a:exchange.type is# 'v'
-            let startcol = virtcol([a:exchange.start.line, a:exchange.start.column])
-            let endcol = virtcol([a:exchange.end.line, a:exchange.end.column])
-        elseif a:exchange.type is# 'V'
-            let startcol = 1
-            let endcol = virtcol([a:exchange.end.line, '$'])
+        var startline: number
+        var endline: number
+        [startline, endline] = [exchange.start.line, exchange.end.line]
+        var startcol: number
+        var endcol: number
+        if exchange.type == 'v'
+            startcol = virtcol([exchange.start.line, exchange.start.column])
+            endcol = virtcol([exchange.end.line, exchange.end.column])
+        elseif exchange.type == 'V'
+            startcol = 1
+            endcol = virtcol([exchange.end.line, '$'])
         endif
-        let regions += [[startline, startcol, endline, endcol]]
+        regions += [[startline, startcol, endline, endcol]]
     endif
-    return map(regions, 's:highlight_region(v:val)')
-endfu
+    return map(regions, {_, v -> Highlight_region(v)})
+enddef
 
 fu s:highlight_clear(match) abort "{{{2
     for m in a:match
@@ -212,7 +216,7 @@ fu s:highlight_clear(match) abort "{{{2
     endfor
 endfu
 
-fu s:highlight_region(region) abort "{{{2
+fu s:Highlight_region(region) abort "{{{2
     let pat = '\%' .. a:region[0] .. 'l\%' .. a:region[1] .. 'v\_.\{-}\%' .. a:region[2] .. 'l\(\%>' .. a:region[3] .. 'v\|$\)'
     return matchadd('ExchangeRegion', pat, 0)
 endfu

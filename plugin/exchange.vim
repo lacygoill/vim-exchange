@@ -42,7 +42,7 @@ nno <expr><unique> cx exchange#op()
 nno <expr><unique> cxx exchange#op() .. '_'
 xno <expr><unique> X exchange#op()
 
-nno <silent><unique> cxc :<c-u>call exchange#clear()<cr>
+nno <unique> cxc <cmd>call exchange#clear()<cr>
 
 " HG {{{1
 
