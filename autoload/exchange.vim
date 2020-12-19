@@ -183,7 +183,7 @@ fu s:fix_cursor(x, y, reverse) abort "{{{2
 endfu
 
 def s:Highlight(exchange: dict<any>): any #{{{2
-    var regions: list<list<number>> = []
+    var regions: list<list<number>>
     if exchange.type == "\<c-v>"
         var blockstartcol = virtcol([exchange.start.line, exchange.start.column])
         var blockendcol = virtcol([exchange.end.line, exchange.end.column])
