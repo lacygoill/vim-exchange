@@ -191,7 +191,7 @@ def s:Highlight(exchange: dict<any>): any #{{{2
             [blockstartcol, blockendcol] = [blockendcol, blockstartcol]
         endif
         regions += range(exchange.start.line, exchange.end.line)
-            ->map({_, v -> [v, blockstartcol, v, blockendcol]})
+            ->map((_, v) => [v, blockstartcol, v, blockendcol])
     else
         var startline: number
         var endline: number
@@ -207,7 +207,7 @@ def s:Highlight(exchange: dict<any>): any #{{{2
         endif
         regions += [[startline, startcol, endline, endcol]]
     endif
-    return map(regions, {_, v -> Highlight_region(v)})
+    return map(regions, (_, v) => Highlight_region(v))
 enddef
 
 fu s:highlight_clear(match) abort "{{{2
