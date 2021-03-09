@@ -4,25 +4,31 @@ if exists('loaded') | finish | endif
 var loaded = true
 
 # Interface {{{1
-def exchange#clear() #{{{2
-    unlet! b:exchange
-    if exists('b:exchange_matches')
-        HighlightClear(b:exchange_matches)
-        unlet! b:exchange_matches
-    endif
-enddef
-
 def exchange#op(type = ''): string #{{{2
     if type == ''
         &opfunc = 'exchange#op'
         return 'g@'
     endif
+
+    # Why using a buffer-local variable?  Why not a script-local one?{{{
+    #
+    # That  would open  the  possibility of  exchanging  texts across  different
+    # buffers, which is too tricky to handle.
+    #
+    # For example, suppose you exchange `foo` in buffer A with `bar` in buffer B.
+    # Then, you want  to undo, and press  `u`.  It would probably  only undo the
+    # change in buffer B, not the one in buffer A.
+    #
+    # Also, when you press `cx` in buffer B, there is no guarantee that buffer A
+    # is still visible hidden.  It could even be deleted.
+    #}}}
     if !exists('b:exchange')
         b:exchange = ExchangeGet(type)
         b:exchange_matches = Highlight(b:exchange)
         # tell vim-repeat that '.' should repeat the Exchange motion
         # https://github.com/tommcdo/vim-exchange/pull/32#issuecomment-69509516
          sil! repeat#invalidate()
+
     else
         var exchange1: dict<any> = b:exchange
         var exchange2: dict<any> = ExchangeGet(type)
@@ -51,12 +57,22 @@ def exchange#op(type = ''): string #{{{2
     endif
     return ''
 enddef
+
+def exchange#clear() #{{{2
+    unlet! b:exchange
+    if exists('b:exchange_matches')
+        HighlightClear(b:exchange_matches)
+        unlet! b:exchange_matches
+    endif
+enddef
 #}}}1
 # Core {{{1
-def ApplyType(pos: dict<number>, type: string): dict<number> #{{{2
-    if type == 'V'
-        pos.column = col([pos.line, '$'])
-    endif
+def FixColumnPos(pos: dict<number>): dict<number> #{{{2
+    #     call setline(1, 'some text')
+    #     exe "norm! V\e"
+    #     echom getpos("'>")
+    #     [0, 1, 2147483647, 0]~
+    pos.column = col([pos.line, '$'])
     return pos
 enddef
 
@@ -134,6 +150,67 @@ def Exchange( #{{{2
         sil exe "norm! `[" .. x.type .. "`]\"zp"
     endif
 
+    # FIXME:{{{
+    #
+    #     $ vim -S <(cat <<'EOF'
+    #     vim9script
+    #     var lines =<< END
+    #     aaa
+    #
+    #     ---
+    #
+    #         bbb
+    #
+    #     ccc ddd
+    #
+    #         eee
+    #     END
+    #     setline(1, lines)
+    #     norm cxi-G.
+    #     EOF
+    #     )
+    #
+    # Expected:
+    #
+    #         bbb
+    #
+    #     ccc ddd
+    #
+    #         eee
+    #
+    #     ---
+    #
+    #     aaa
+    #
+    # Actual:
+    #
+    #     bbb
+    #
+    #     ddd
+    #
+    #     eee
+    #     ---
+    #     aaa
+    #
+    # In a markdown buffer, the result is a bit different (but still wrong):
+    #
+    #     bbb
+    #
+    #     ddd
+    #
+    #     eee
+    #
+    #     ---
+    #         aaa
+    #     ____
+    #
+    # The underscores stand for spaces.
+    #
+    # ---
+    #
+    # The issue disappears  when we make sure  that the first non  whitespace on the
+    # first line of each block is on column 1.
+    #}}}
     if indent
         var xlines: number = 1 + x.end.line - x.start.line
         var ylines: number = expand ? xlines : 1 + y.end.line - y.start.line
@@ -155,32 +232,40 @@ def Exchange( #{{{2
 enddef
 
 def ExchangeGet(arg_type: string): dict<any> #{{{2
-    var reg_save: dict<any> = SaveReg('"')
-    var sel_save: string = &sel | set sel=inclusive
-    var type: string
     var start: dict<number>
     var end: dict<number>
-    if arg_type == 'line'
-        type = 'V'
-        [start, end] = StorePos("'[", "']")
-        sil norm! '[V']y
-    elseif arg_type == 'block'
-        type = "\<c-v>"
-        [start, end] = StorePos("'[", "']")
-        sil exe "norm! `[\<c-v>`]y"
-    else
-        type = 'v'
-        [start, end] = StorePos("'[", "']")
-        sil norm! `[v`]y
-    endif
-    &sel = sel_save
-    var reg_yank: dict<any> = getreginfo('"')
-    RestoreReg('"', reg_save)
+    [start, end] = [Getpos("'["), Getpos("']")]
+
+    var type: string
+    var yanked: dict<any>
+
+    var sel_save: string = &sel
+    var reg_save: list<dict<any>> = [SaveReg('"'), SaveReg('0')]
+
+    try
+        set sel=inclusive
+        if arg_type == 'line'
+            type = 'V'
+            sil norm! '[V']y
+        elseif arg_type == 'block'
+            type = "\<c-v>"
+            sil exe "norm! `[\<c-v>`]y"
+        else
+            type = 'v'
+            sil norm! `[v`]y
+        endif
+        yanked = getreginfo('"')
+    finally
+        &sel = sel_save
+        RestoreReg('"', reg_save[0])
+        RestoreReg('0', reg_save[1])
+    endtry
+
     return {
-        reginfo: reg_yank,
+        reginfo: yanked,
         type: type,
         start: start,
-        end: ApplyType(end, type)
+        end: type == 'V' ? FixColumnPos(end) : end
         }
 enddef
 
@@ -215,9 +300,6 @@ def Highlight(exchange: dict<any>): any #{{{2
         regions += range(exchange.start.line, exchange.end.line)
             ->mapnew((_, v: number): list<number> => [v, blockstartcol, v, blockendcol])
     else
-        var startline: number
-        var endline: number
-        [startline, endline] = [exchange.start.line, exchange.end.line]
         var startcol: number
         var endcol: number
         if exchange.type == 'v'
@@ -227,7 +309,7 @@ def Highlight(exchange: dict<any>): any #{{{2
             startcol = 1
             endcol = virtcol([exchange.end.line, '$'])
         endif
-        regions += [[startline, startcol, endline, endcol]]
+        regions += [[exchange.start.line, startcol, exchange.end.line, endcol]]
     endif
     return regions
         ->mapnew((_, v: list<number>): number => HighlightRegion(v))
@@ -235,7 +317,7 @@ enddef
 
 def HighlightClear(match: list<number>) #{{{2
     for m in match
-         sil! matchdelete(m)
+        sil! matchdelete(m)
     endfor
 enddef
 
@@ -259,10 +341,11 @@ def Reindent(start: number, lines: number, arg_new_indent: string) #{{{2
     else
         new_indent = arg_new_indent
     endif
+
     var indent: string = nextnonblank(start)->getline()->matchstr('^\s*')
     if strdisplaywidth(new_indent) > strdisplaywidth(indent)
         for lnum in range(start, start + lines - 1)
-            setline(lnum, new_indent .. getline(lnum)[strlen(indent) : ])
+            setline(lnum, new_indent .. getline(lnum)[strchars(indent, true) :])
         endfor
     elseif strdisplaywidth(new_indent) < strdisplaywidth(indent)
         var can_dedent: bool = true
@@ -274,7 +357,7 @@ def Reindent(start: number, lines: number, arg_new_indent: string) #{{{2
         if can_dedent
             for lnum in range(start, start + lines - 1)
                 if getline(lnum)->stridx(new_indent) == 0
-                    setline(lnum, new_indent .. getline(lnum)[strlen(indent) : ])
+                    setline(lnum, new_indent .. getline(lnum)[strchars(indent, true) :])
                 endif
             endfor
         endif
@@ -317,8 +400,4 @@ def RestoreReg(name: string, reg: dict<any>) #{{{2
      # `silent!` because of https://github.com/tommcdo/vim-exchange/issues/31
      sil! setreg(name, reg)
  enddef
-
-def StorePos(start: string, end: string): list<dict<number>> #{{{2
-    return [Getpos(start), Getpos(end)]
-enddef
 
