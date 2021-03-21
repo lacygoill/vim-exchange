@@ -345,7 +345,7 @@ def Reindent(start: number, lines: number, arg_new_indent: string) #{{{2
     var indent: string = nextnonblank(start)->getline()->matchstr('^\s*')
     if strdisplaywidth(new_indent) > strdisplaywidth(indent)
         for lnum in range(start, start + lines - 1)
-            setline(lnum, new_indent .. getline(lnum)[strchars(indent) :])
+            setline(lnum, new_indent .. getline(lnum)[strcharlen(indent) :])
         endfor
     elseif strdisplaywidth(new_indent) < strdisplaywidth(indent)
         var can_dedent: bool = true
@@ -357,7 +357,7 @@ def Reindent(start: number, lines: number, arg_new_indent: string) #{{{2
         if can_dedent
             for lnum in range(start, start + lines - 1)
                 if getline(lnum)->stridx(new_indent) == 0
-                    setline(lnum, new_indent .. getline(lnum)[strchars(indent) :])
+                    setline(lnum, new_indent .. getline(lnum)[strcharlen(indent) :])
                 endif
             endfor
         endif
