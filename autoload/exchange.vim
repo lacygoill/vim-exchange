@@ -122,7 +122,7 @@ def Exchange( #{{{2
     y: dict<any>,
     reverse: bool,
     expand: bool
-    )
+)
     var reg_z: dict<any> = SaveReg('z')
     var reg_unnamed: dict<any> = SaveReg('"')
     var sel_save: string = &sel | set sel=inclusive
@@ -266,10 +266,14 @@ def ExchangeGet(arg_type: string): dict<any> #{{{2
         type: type,
         start: start,
         end: type == 'V' ? FixColumnPos(end) : end
-        }
+    }
 enddef
 
-def FixCursor(x: dict<any>, y: dict<any>, reverse: bool) #{{{2
+def FixCursor( #{{{2
+    x: dict<any>,
+    y: dict<any>,
+    reverse: bool
+)
     if reverse
         cursor(x.start.line, x.start.column)
     else
@@ -288,12 +292,12 @@ def Highlight(exchange: dict<any>): any #{{{2
     if exchange.type == "\<c-v>"
         var blockstartcol: number = virtcol([
             exchange.start.line,
-            exchange.start.column
-            ])
+            exchange.start.column - 1
+            ]) + 1
         var blockendcol: number = virtcol([
             exchange.end.line,
-            exchange.end.column
-            ])
+            exchange.end.column - 1
+            ]) + 1
         if blockstartcol > blockendcol
             [blockstartcol, blockendcol] = [blockendcol, blockstartcol]
         endif
@@ -303,8 +307,8 @@ def Highlight(exchange: dict<any>): any #{{{2
         var startcol: number
         var endcol: number
         if exchange.type == 'v'
-            startcol = virtcol([exchange.start.line, exchange.start.column])
-            endcol = virtcol([exchange.end.line, exchange.end.column])
+            startcol = virtcol([exchange.start.line, exchange.start.column - 1]) + 1
+            endcol = virtcol([exchange.end.line, exchange.end.column - 1]) + 1
         elseif exchange.type == 'V'
             startcol = 1
             endcol = virtcol([exchange.end.line, '$'])
@@ -327,7 +331,11 @@ def HighlightRegion(region: list<number>): number #{{{2
     return matchadd('ExchangeRegion', pat, 0)
 enddef
 
-def Reindent(start: number, lines: number, arg_new_indent: string) #{{{2
+def Reindent( #{{{2
+    start: number,
+    lines: number,
+    arg_new_indent: string
+)
     var new_indent: string
     if GetSetting('exchange_indent', '') == '=='
         var lnum: number = nextnonblank(start)
@@ -381,7 +389,7 @@ def Getpos(mark: string): dict<number> #{{{2
         line: pos[1],
         column: pos[2],
         offset: pos[3]
-        }
+    }
 enddef
 
 def Setpos(mark: string, pos: dict<number>) #{{{2
