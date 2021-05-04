@@ -141,13 +141,13 @@ def Exchange( #{{{2
     Setpos("'[", y.start)
     Setpos("']", y.end)
     setreg('z', x.reginfo)
-    sil exe "norm! `[" .. y.type .. "`]\"zp"
+    exe "sil norm! `[" .. y.type .. "`]\"zp"
 
     if !expand
         Setpos("'[", x.start)
         Setpos("']", x.end)
         setreg('z', y.reginfo)
-        sil exe "norm! `[" .. x.type .. "`]\"zp"
+        exe "sil norm! `[" .. x.type .. "`]\"zp"
     endif
 
     # FIXME:{{{
@@ -249,7 +249,7 @@ def ExchangeGet(arg_type: string): dict<any> #{{{2
             sil norm! '[V']y
         elseif arg_type == 'block'
             type = "\<c-v>"
-            sil exe "norm! `[\<c-v>`]y"
+            exe "sil norm! `[\<c-v>`]y"
         else
             type = 'v'
             sil norm! `[v`]y
