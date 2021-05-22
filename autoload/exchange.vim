@@ -71,7 +71,7 @@ def FixColumnPos(pos: dict<number>): dict<number> #{{{2
     #     call setline(1, 'some text')
     #     exe "norm! V\e"
     #     echom getpos("'>")
-    #     [0, 1, 2147483647, 0]~
+    #     [0, 1, 2147483647, 0]˜
     pos.column = col([pos.line, '$'])
     return pos
 enddef
