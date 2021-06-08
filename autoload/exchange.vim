@@ -6,7 +6,7 @@ var loaded = true
 # Interface {{{1
 def exchange#op(type = ''): string #{{{2
     if type == ''
-        &opfunc = 'exchange#op'
+        &operatorfunc = 'exchange#op'
         return 'g@'
     endif
 
@@ -68,7 +68,7 @@ enddef
 #}}}1
 # Core {{{1
 def FixColumnPos(pos: dict<number>): dict<number> #{{{2
-    #     call setline(1, 'some text')
+    #     'some text'->setline(1)
     #     exe "norm! V\e"
     #     echom getpos("'>")
     #     [0, 1, 2147483647, 0]˜
@@ -125,7 +125,7 @@ def Exchange( #{{{2
 )
     var reg_z: dict<any> = SaveReg('z')
     var reg_unnamed: dict<any> = SaveReg('"')
-    var sel_save: string = &sel | set sel=inclusive
+    var selection_save: string = &selection | &selection = 'inclusive'
 
     var indent: bool = x.type == 'V' && y.type == 'V'
 
@@ -165,7 +165,7 @@ def Exchange( #{{{2
     #
     #         eee
     #     END
-    #     setline(1, lines)
+    #     lines->setline(1)
     #     norm cxi-G.
     #     EOF
     #     )
@@ -226,7 +226,7 @@ def Exchange( #{{{2
         FixCursor(x, y, reverse)
     endif
 
-    &sel = sel_save
+    &selection = selection_save
     RestoreReg('z', reg_z)
     RestoreReg('"', reg_unnamed)
 enddef
@@ -239,11 +239,11 @@ def ExchangeGet(arg_type: string): dict<any> #{{{2
     var type: string
     var yanked: dict<any>
 
-    var sel_save: string = &sel
+    var selection_save: string = &selection
     var reg_save: list<dict<any>> = [SaveReg('"'), SaveReg('0')]
 
     try
-        set sel=inclusive
+        &selection = 'inclusive'
         if arg_type == 'line'
             type = 'V'
             sil norm! '[V']y
@@ -256,7 +256,7 @@ def ExchangeGet(arg_type: string): dict<any> #{{{2
         endif
         yanked = getreginfo('"')
     finally
-        &sel = sel_save
+        &selection = selection_save
         RestoreReg('"', reg_save[0])
         RestoreReg('0', reg_save[1])
     endtry
