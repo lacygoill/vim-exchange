@@ -35,6 +35,35 @@ var loaded = true
 #    - `aaa` is right below the rule (there should be an empty line between them)
 #    - `ddddd` has been truncated to `d`
 #}}}
+# FIXME:{{{
+#
+#     $ vim -S <(cat <<'EOF'
+#         vim9script
+#     var lines =<< END
+#       aaa
+#     + bbb
+#       ccc
+#     + ddd
+#     END
+#         lines->setline(1)
+#         feedkeys('cxj2j.')
+#     EOF
+#     )
+#
+# Expected:
+#
+#       ccc
+#     + ddd
+#       aaa
+#     + bbb
+#
+# Actual:
+#
+#     ccc
+#     ddd
+#     aaa
+#     bbb
+#}}}
 
 # Mappings {{{1
 
