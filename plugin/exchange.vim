@@ -67,14 +67,14 @@ var loaded = true
 
 # Mappings {{{1
 
-nno <expr><unique> cx exchange#op()
-nno <expr><unique> cxx exchange#op() .. '_'
-xno <expr><unique> X exchange#op()
+nnoremap <expr><unique> cx exchange#op()
+nnoremap <expr><unique> cxx exchange#op() .. '_'
+xnoremap <expr><unique> X exchange#op()
 
-nno <unique> cxc <cmd>call exchange#clear()<cr>
+nnoremap <unique> cxc <Cmd>call exchange#clear()<CR>
 
 # HG {{{1
 
 # `:def` is  necessary for  the highlighting  to persist  across changes  of the
 # color scheme
-hi def link ExchangeRegion Search
+highlight def link ExchangeRegion Search

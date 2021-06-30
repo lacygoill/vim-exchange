@@ -27,7 +27,7 @@ def exchange#op(type = ''): string #{{{2
         b:exchange_matches = Highlight(b:exchange)
         # tell vim-repeat that '.' should repeat the Exchange motion
         # https://github.com/tommcdo/vim-exchange/pull/32#issuecomment-69509516
-         sil! repeat#invalidate()
+         silent! repeat#invalidate()
 
     else
         var exchange1: dict<any> = b:exchange
@@ -69,8 +69,8 @@ enddef
 # Core {{{1
 def FixColumnPos(pos: dict<number>): dict<number> #{{{2
     #     'some text'->setline(1)
-    #     exe "norm! V\e"
-    #     echom getpos("'>")
+    #     execute "normal! V\<Esc>"
+    #     echomsg getpos("'>")
     #     [0, 1, 2147483647, 0]˜
     pos.column = col([pos.line, '$'])
     return pos
@@ -82,7 +82,7 @@ def Compare(x: dict<any>, y: dict<any>): string #{{{2
 #        > 0 if x comes after y in buffer
 
     # Compare two blockwise regions.
-    if x.type == "\<c-v>" && y.type == "\<c-v>"
+    if x.type == "\<C-V>" && y.type == "\<C-V>"
         if Intersects(x, y)
             return 'overlap'
         endif
@@ -141,13 +141,13 @@ def Exchange( #{{{2
     Setpos("'[", y.start)
     Setpos("']", y.end)
     setreg('z', x.reginfo)
-    exe "sil norm! `[" .. y.type .. "`]\"zp"
+    execute "silent normal! `[" .. y.type .. "`]\"zp"
 
     if !expand
         Setpos("'[", x.start)
         Setpos("']", x.end)
         setreg('z', y.reginfo)
-        exe "sil norm! `[" .. x.type .. "`]\"zp"
+        execute "silent normal! `[" .. x.type .. "`]\"zp"
     endif
 
     # FIXME:{{{
@@ -166,7 +166,7 @@ def Exchange( #{{{2
     #         eee
     #     END
     #     lines->setline(1)
-    #     norm cxi-G.
+    #     normal cxi-G.
     #     EOF
     #     )
     #
@@ -246,13 +246,13 @@ def ExchangeGet(arg_type: string): dict<any> #{{{2
         &selection = 'inclusive'
         if arg_type == 'line'
             type = 'V'
-            sil norm! '[V']y
+            silent normal! '[V']y
         elseif arg_type == 'block'
-            type = "\<c-v>"
-            exe "sil norm! `[\<c-v>`]y"
+            type = "\<C-V>"
+            execute "silent normal! `[\<C-V>`]y"
         else
             type = 'v'
-            sil norm! `[v`]y
+            silent normal! `[v`]y
         endif
         yanked = getreginfo('"')
     finally
@@ -289,7 +289,7 @@ enddef
 
 def Highlight(exchange: dict<any>): any #{{{2
     var regions: list<list<number>>
-    if exchange.type == "\<c-v>"
+    if exchange.type == "\<C-V>"
         var blockstartcol: number = virtcol([
             exchange.start.line,
             exchange.start.column - 1
@@ -321,7 +321,7 @@ enddef
 
 def HighlightClear(match: list<number>) #{{{2
     for m in match
-        sil! matchdelete(m)
+        silent! matchdelete(m)
     endfor
 enddef
 
@@ -343,7 +343,7 @@ def Reindent( #{{{2
             return
         endif
         var line: string = getline(lnum)
-        exe ' sil norm! ' .. lnum .. 'G=='
+        execute ' silent normal! ' .. lnum .. 'G=='
         new_indent = getline(lnum)->matchstr('^\s*')
         setline(lnum, line)
     else
@@ -406,6 +406,6 @@ enddef
 
 def RestoreReg(name: string, reg: dict<any>) #{{{2
      # `silent!` because of https://github.com/tommcdo/vim-exchange/issues/31
-     sil! setreg(name, reg)
+     silent! setreg(name, reg)
  enddef
 
