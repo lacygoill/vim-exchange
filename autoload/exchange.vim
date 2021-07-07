@@ -317,7 +317,7 @@ def Highlight(exchange: dict<any>): any #{{{2
 enddef
 
 def HighlightClear(match: list<number>) #{{{2
-    for m in match
+    for m: number in match
         silent! matchdelete(m)
     endfor
 enddef
@@ -349,18 +349,18 @@ def Reindent( #{{{2
 
     var indent: string = nextnonblank(start)->getline()->matchstr('^\s*')
     if strdisplaywidth(new_indent) > strdisplaywidth(indent)
-        for lnum in range(start, start + lines - 1)
+        for lnum: number in range(start, start + lines - 1)
             setline(lnum, new_indent .. getline(lnum)[strcharlen(indent) :])
         endfor
     elseif strdisplaywidth(new_indent) < strdisplaywidth(indent)
         var can_dedent: bool = true
-        for lnum in range(start, start + lines - 1)
+        for lnum: number in range(start, start + lines - 1)
             if getline(lnum)->stridx(new_indent) != 0 && nextnonblank(lnum) == lnum
                 can_dedent = false
             endif
         endfor
         if can_dedent
-            for lnum in range(start, start + lines - 1)
+            for lnum: number in range(start, start + lines - 1)
                 if getline(lnum)->stridx(new_indent) == 0
                     setline(lnum, new_indent .. getline(lnum)[strcharlen(indent) :])
                 endif
