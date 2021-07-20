@@ -77,4 +77,4 @@ nnoremap <unique> cxc <Cmd>call exchange#clear()<CR>
 
 # `:def` is  necessary for  the highlighting  to persist  across changes  of the
 # color scheme
-highlight def link ExchangeRegion Search
+highlight default link ExchangeRegion Search
